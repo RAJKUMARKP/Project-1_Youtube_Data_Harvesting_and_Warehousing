@@ -4,6 +4,7 @@ import psycopg2
 import pandas as pd
 import streamlit as st
 import numpy as np
+import altair as alt
 
 
 #Youtube API Key Connection
@@ -478,9 +479,13 @@ if st.button("Collect and Store Data"):
     for ch_data in collection1.find({},{"_id":0,"channel_information":1}):
         ch_ids.append(ch_data["channel_information"])
                     
+                     #ch_data["channel_information"]["Channel_Id"]
                      #ch_ids
-    if channel_id in ch_data["channel_information"]["Channel_Id"]:
-        st.success("Channel Details of the given channel id already exists")
+    if len(ch_ids) == 0:
+        insert=channel_details(channel_id)
+        st.success(insert)
+    elif channel_id in ch_data["channel_information"]["Channel_Id"]:
+        st.error("Channel Details of the given channel id already exists")
     else:
         insert=channel_details(channel_id)
         st.success(insert)
@@ -543,6 +548,11 @@ elif question=="2. Which channels have the most number of videos, and how many v
     df2=pd.DataFrame(t2,columns=["Channel Name","Videos Count"])
     df2.index = np.arange(1, len(df2) + 1)
     st.write(df2)
+    bar_chart=alt.Chart(df2).mark_bar().encode(
+        x='Channel Name',
+        y='Videos Count'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
 
 elif question=="3. What are the top 10 most viewed videos and their respective channels?":
     query3='''select channel_name as channelname,title as videotitle,views as views from videos
@@ -553,6 +563,12 @@ elif question=="3. What are the top 10 most viewed videos and their respective c
     df3=pd.DataFrame(t3,columns=["Channel Name","Video Title","Views Count"])
     df3.index = np.arange(1, len(df3) + 1)
     st.write(df3)
+    bar_chart=alt.Chart(df3).mark_bar().encode(
+        x='Video Title',
+        y='Views Count',
+        color='Channel Name'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
 
 elif question=="4. How many comments were made on each video, and what are their corresponding video names?":
     query4='''select channel_name as channelname,title as videotitle,comments as no_comments from videos where comments is not null order by comments desc'''
@@ -572,15 +588,26 @@ elif question=="5. Which videos have the highest number of likes, and what are t
     df5=pd.DataFrame(t5,columns=["Channel Name","Video Title","Likes Count"])
     df5.index = np.arange(1, len(df5) + 1)
     st.write(df5)
+    bar_chart=alt.Chart(df5).mark_bar().encode(
+        x='Video Title',
+        y='Likes Count',
+        color='Channel Name'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
 
 elif question=="6. What is the total number of likes and dislikes for each video, and what are their corresponding video names?":
-    query6='''select title as videotitle,likes as likecount from videos'''
+    query6='''select title as videotitle,likes as likecount from videos where likes is not null'''
     cursor.execute(query6)
     mydb.commit()
     t6=cursor.fetchall()
     df6=pd.DataFrame(t6,columns=["Video Title","Likes Count"])
     df6.index = np.arange(1, len(df6) + 1)
     st.write(df6)
+    bar_chart=alt.Chart(df6).mark_bar().encode(
+        x='Video Title',
+        y='Likes Count'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
 
 elif question=="7. What is the total number of views for each channel, and what are their corresponding channel names?":
     query7='''select channel_name as channelname,views as totalviews from channels'''
@@ -590,6 +617,11 @@ elif question=="7. What is the total number of views for each channel, and what 
     df7=pd.DataFrame(t7,columns=["Channel Name","Views Count"])
     df7.index = np.arange(1, len(df7) + 1)
     st.write(df7)
+    bar_chart=alt.Chart(df7).mark_bar().encode(
+        x='Channel Name',
+        y='Views Count'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
 
 elif question=="8. What are the names of all the channels that have published videos in the year 2022?":
     query8='''select channel_name as channelname,title as video_title,published_date as videorelease from videos
@@ -602,7 +634,7 @@ elif question=="8. What are the names of all the channels that have published vi
     st.write(df8)
 
 elif question=="9. What is the average duration of all videos in each channel, and what are their corresponding channel names?":
-    query9='''select channel_name as channelname,AVG(duration) as averageduration from videos group by channel_name order by averageduration desc'''
+    query9='''select channel_name as channelname,AVG(duration) as averageduration from videos group by channel_name'''
     cursor.execute(query9)
     mydb.commit()
     t9=cursor.fetchall()
@@ -617,6 +649,11 @@ elif question=="9. What is the average duration of all videos in each channel, a
     df11=pd.DataFrame(Avg_time)
     df11.index = np.arange(1, len(df11) + 1)
     st.write(df11)
+    bar_chart=alt.Chart(df11).mark_bar().encode(
+        x='Channel_Title',
+        y='Average_Duration'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
 
 elif question=="10. Which videos have the highest number of comments, and what are their corresponding channel names?":
     query10='''select title as videotitle,channel_name as channelname,comments as comments from videos
@@ -624,6 +661,12 @@ elif question=="10. Which videos have the highest number of comments, and what a
     cursor.execute(query10)
     mydb.commit()
     t10=cursor.fetchall()
-    df10=pd.DataFrame(t10,columns=["Video Title","Channel Name","Comments"])
+    df10=pd.DataFrame(t10,columns=["Video Title","Channel Name","Comments Count"])
     df10.index = np.arange(1, len(df10) + 1)
     st.write(df10)
+    bar_chart=alt.Chart(df10).mark_bar().encode(
+        x='Video Title',
+        y='Comments Count',
+        color='Channel Name'
+    )
+    st.altair_chart(bar_chart,use_container_width=True)
